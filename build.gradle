@@ -1,0 +1,75 @@
+plugins {
+    id 'java-library'
+    id 'checkstyle'
+    id 'maven-publish'
+}
+
+group = 'com.habittracker'
+version = '0.1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(24)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Security types (Authentication, GrantedAuthority, SecurityContextHolder)
+    // and the servlet filter base class this library builds on.
+    implementation 'org.springframework.security:spring-security-core:6.3.4'
+    implementation 'org.springframework.security:spring-security-web:6.3.4'
+
+    // Servlet API: only needed at compile time - the consuming app's own
+    // container/servlet dependency provides the real implementation.
+    compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+
+    // @AutoConfiguration - the consuming app's own Spring Boot brings the
+    // real spring-boot-autoconfigure at runtime.
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure:3.3.5'
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+    compileOnly 'org.projectlombok:lombok:1.18.46'
+    annotationProcessor 'org.projectlombok:lombok:1.18.46'
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.mockito:mockito-core:5.23.0'
+    testImplementation 'org.assertj:assertj-core:3.26.3'
+    testImplementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+    testCompileOnly 'org.projectlombok:lombok:1.18.46'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.46'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            name = 'GitHubPackages'
+            url = uri('https://maven.pkg.github.com/NikitaLafinskiy/habit-tracker-shared-libraries-auth')
+            credentials {
+                username = System.getenv('GITHUB_ACTOR')
+                password = System.getenv('GITHUB_TOKEN')
+            }
+        }
+    }
+}
