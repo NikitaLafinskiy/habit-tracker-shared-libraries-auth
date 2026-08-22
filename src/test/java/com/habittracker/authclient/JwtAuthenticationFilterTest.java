@@ -31,7 +31,8 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("""
+    @DisplayName(
+            """
             Given a request with no Authorization header
             When the filter runs
             Then it passes the request through without touching the security context
@@ -52,7 +53,8 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("""
+    @DisplayName(
+            """
             Given a request with a valid Bearer token
             When the filter runs
             Then it sets the Authentication from the validator and continues the chain
@@ -60,8 +62,9 @@ class JwtAuthenticationFilterTest {
     void doFilterInternal_validToken_setsAuthenticationAndContinues() throws Exception {
         // Given
         HttpServletRequest request = mock(HttpServletRequest.class);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                new JwtPrincipal("user@gmail.com", "First", "Last"), null, List.of());
+        Authentication authentication =
+                new UsernamePasswordAuthenticationToken(
+                        new JwtPrincipal("user@gmail.com", "First", "Last"), null, List.of());
 
         when(request.getHeader("Authorization")).thenReturn("Bearer valid-token");
         when(accessTokenValidator.validateToken("valid-token")).thenReturn(true);
@@ -80,7 +83,8 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("""
+    @DisplayName(
+            """
             Given a request with an expired/invalid Bearer token
             When the filter runs
             Then it throws JwtAuthenticationException and never continues the chain
@@ -94,14 +98,17 @@ class JwtAuthenticationFilterTest {
         when(accessTokenValidator.validateToken("invalid-token")).thenReturn(false);
 
         // When / Then
-        JwtAuthenticationException exception = assertThrows(JwtAuthenticationException.class,
-                () -> filter.doFilterInternal(request, response, filterChain));
+        JwtAuthenticationException exception =
+                assertThrows(
+                        JwtAuthenticationException.class,
+                        () -> filter.doFilterInternal(request, response, filterChain));
         assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         verify(filterChain, never()).doFilter(any(), any());
     }
 
     @Test
-    @DisplayName("""
+    @DisplayName(
+            """
             Given the validator itself throws (e.g. malformed/tampered token)
             When the filter runs
             Then it throws JwtAuthenticationException rather than the raw exception
@@ -116,7 +123,8 @@ class JwtAuthenticationFilterTest {
                 .thenThrow(new RuntimeException("malformed"));
 
         // When / Then
-        assertThrows(JwtAuthenticationException.class,
+        assertThrows(
+                JwtAuthenticationException.class,
                 () -> filter.doFilterInternal(request, response, filterChain));
     }
 }

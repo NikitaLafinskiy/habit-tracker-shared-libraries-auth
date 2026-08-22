@@ -24,6 +24,29 @@ Token **issuance** (login/register, refresh-token storage/revocation) stays
 in the `auth` service itself - other services should only ever be able to
 verify tokens, never mint them.
 
+## Code style
+
+Three tools, no overlap (wired in [`gradle/quality.gradle`](gradle/quality.gradle),
+matching the `api` and `auth` services):
+
+| Tool | Owns | Fix it with |
+|---|---|---|
+| **Spotless** (google-java-format, `aosp`) | all layout — 4-space indent, 100-column wrap, whitespace, import order | `./gradlew spotlessApply` |
+| **Checkstyle** | semantic rules only — naming, declaration order, visibility, switch correctness | by hand |
+| **Error Prone** | real defects at compile time — it runs inside `javac` | `./gradlew compileJava -PerrorproneFix=<Check1,Check2>` |
+
+`./gradlew check` runs all three. **Never hand-format Java** — run `spotlessApply` and
+let it decide. Don't add layout rules back to `config/checkstyle/checkstyle.xml`; they
+will either be silently redundant or fight the formatter.
+
+[`.githooks/pre-commit`](.githooks/pre-commit) runs `spotlessApply` over staged Java and
+re-stages it. It is committed, but **`core.hooksPath` is local config and does not
+survive a clone** — run this once per checkout or the hook silently never fires:
+
+```sh
+git config core.hooksPath .githooks
+```
+
 ## Publishing
 
 Publishes to this repo's own GitHub Packages Maven registry

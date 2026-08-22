@@ -1,8 +1,13 @@
 plugins {
     id 'java-library'
     id 'checkstyle'
+    id 'com.diffplug.spotless' version '7.0.4'
+    id 'net.ltgt.errorprone' version '5.1.0'
     id 'maven-publish'
 }
+
+// Spotless / Checkstyle / Error Prone wiring.
+apply from: "$rootDir/gradle/quality.gradle"
 
 group = 'com.habittracker'
 version = '0.1.0'

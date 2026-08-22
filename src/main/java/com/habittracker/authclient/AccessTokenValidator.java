@@ -33,15 +33,17 @@ public class AccessTokenValidator {
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaims(token);
 
-        JwtPrincipal principal = new JwtPrincipal(
-                claims.get(EMAIL_CLAIM, String.class),
-                claims.get(FIRST_NAME_CLAIM, String.class),
-                claims.get(LAST_NAME_CLAIM, String.class));
+        JwtPrincipal principal =
+                new JwtPrincipal(
+                        claims.get(EMAIL_CLAIM, String.class),
+                        claims.get(FIRST_NAME_CLAIM, String.class),
+                        claims.get(LAST_NAME_CLAIM, String.class));
 
         List<String> authorityNames = claims.get(AUTHORITIES_CLAIM, List.class);
-        List<GrantedAuthority> authorities = authorityNames.stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
+        List<GrantedAuthority> authorities =
+                authorityNames.stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
 
         return new UsernamePasswordAuthenticationToken(principal, null, authorities);
     }
