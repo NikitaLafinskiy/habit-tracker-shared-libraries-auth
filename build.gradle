@@ -10,7 +10,7 @@ plugins {
 apply from: "$rootDir/gradle/quality.gradle"
 
 group = 'com.habittracker'
-version = '0.3.0'
+version = '0.4.0'
 
 java {
     toolchain {
@@ -44,7 +44,6 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
-    implementation 'software.amazon.awssdk:ssm:2.45.1'
 
     compileOnly 'org.projectlombok:lombok:1.18.46'
     annotationProcessor 'org.projectlombok:lombok:1.18.46'
