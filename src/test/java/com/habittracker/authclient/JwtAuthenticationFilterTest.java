@@ -21,6 +21,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 class JwtAuthenticationFilterTest {
+    private static final String USER_ID = "3f0e8c1a-6b2d-4c5e-9f7a-1b2c3d4e5f60";
+
     private final AccessTokenValidator accessTokenValidator = mock(AccessTokenValidator.class);
     private final JwtAuthenticationFilter filter =
             new JwtAuthenticationFilter(accessTokenValidator);
@@ -64,7 +66,9 @@ class JwtAuthenticationFilterTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(
-                        new JwtPrincipal("user@gmail.com", "First", "Last"), null, List.of());
+                        new JwtPrincipal(USER_ID, "user@gmail.com", "First", "Last"),
+                        null,
+                        List.of());
 
         when(request.getHeader("Authorization")).thenReturn("Bearer valid-token");
         when(accessTokenValidator.validateToken("valid-token")).thenReturn(true);

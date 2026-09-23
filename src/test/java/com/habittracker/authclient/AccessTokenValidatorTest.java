@@ -19,6 +19,7 @@ import org.springframework.security.core.GrantedAuthority;
 
 class AccessTokenValidatorTest {
     private static final String SECRET = "test-access-secret-at-least-256-bits-long-for-hmac-sha";
+    private static final String USER_ID = "3f0e8c1a-6b2d-4c5e-9f7a-1b2c3d4e5f60";
 
     private final AccessTokenValidator validator = new AccessTokenValidator(SECRET);
 
@@ -28,11 +29,21 @@ class AccessTokenValidatorTest {
             String lastName,
             List<String> authorities,
             Date expiration) {
+        return tokenFor(USER_ID, email, firstName, lastName, authorities, expiration);
+    }
+
+    private String tokenFor(
+            String subject,
+            String email,
+            String firstName,
+            String lastName,
+            List<String> authorities,
+            Date expiration) {
         SecretKey key = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
                 .issuedAt(new Date())
                 .expiration(expiration)
-                .subject(email)
+                .subject(subject)
                 .claim("email", email)
                 .claim("firstName", firstName)
                 .claim("lastName", lastName)
@@ -122,6 +133,7 @@ class AccessTokenValidatorTest {
         Authentication authentication = validator.getAuthentication(token);
 
         JwtPrincipal principal = (JwtPrincipal) authentication.getPrincipal();
+        assertThat(principal.getUserId()).isEqualTo(USER_ID);
         assertThat(principal.getEmail()).isEqualTo("user@gmail.com");
         assertThat(principal.getFirstName()).isEqualTo("First");
         assertThat(principal.getLastName()).isEqualTo("Last");
@@ -129,5 +141,40 @@ class AccessTokenValidatorTest {
         assertThat(authentication.getAuthorities())
                 .extracting(GrantedAuthority::getAuthority)
                 .containsExactlyInAnyOrder("ROLE_ADMIN", "ROLE_CUSTOMER");
+    }
+
+    @Test
+    @DisplayName(
+            """
+            Given an unexpired token minted before the user-id migration, whose
+            subject is an email
+            When validateToken() runs
+            Then it returns false, so the client refreshes into a UUID token
+            """)
+    void validateToken_emailSubject_returnsFalse() {
+        String token =
+                tokenFor(
+                        "user@gmail.com",
+                        "user@gmail.com",
+                        "First",
+                        "Last",
+                        List.of("ROLE_CUSTOMER"),
+                        new Date(System.currentTimeMillis() + 60_000));
+
+        assertThat(validator.validateToken(token)).isFalse();
+    }
+
+    @Test
+    @DisplayName(
+            """
+            Given subjects that are not canonical UUIDs
+            When isUserId() runs
+            Then only the canonical lowercase UUID passes
+            """)
+    void isUserId_onlyCanonicalUuids() {
+        assertThat(AccessTokenValidator.isUserId(USER_ID)).isTrue();
+        assertThat(AccessTokenValidator.isUserId("user@gmail.com")).isFalse();
+        assertThat(AccessTokenValidator.isUserId(USER_ID.toUpperCase())).isFalse();
+        assertThat(AccessTokenValidator.isUserId(null)).isFalse();
     }
 }

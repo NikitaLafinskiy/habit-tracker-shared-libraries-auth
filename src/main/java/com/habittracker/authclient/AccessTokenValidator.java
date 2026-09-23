@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.crypto.SecretKey;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,7 +28,7 @@ public class AccessTokenValidator {
 
     public boolean validateToken(String token) {
         Claims claims = parseClaims(token);
-        return claims.getExpiration().after(new Date());
+        return claims.getExpiration().after(new Date()) && isUserId(claims.getSubject());
     }
 
     public Authentication getAuthentication(String token) {
@@ -35,6 +36,7 @@ public class AccessTokenValidator {
 
         JwtPrincipal principal =
                 new JwtPrincipal(
+                        claims.getSubject(),
                         claims.get(EMAIL_CLAIM, String.class),
                         claims.get(FIRST_NAME_CLAIM, String.class),
                         claims.get(LAST_NAME_CLAIM, String.class));
@@ -46,6 +48,17 @@ public class AccessTokenValidator {
                         .collect(Collectors.toList());
 
         return new UsernamePasswordAuthenticationToken(principal, null, authorities);
+    }
+
+    public static boolean isUserId(String subject) {
+        if (subject == null) {
+            return false;
+        }
+        try {
+            return UUID.fromString(subject).toString().equals(subject);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     private Claims parseClaims(String token) {
